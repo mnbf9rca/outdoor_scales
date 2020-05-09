@@ -12,3 +12,39 @@ It assumes:
 - HX711 SCK is connected to pin D2
 
 The LED blinks every time a reading is taken.
+
+## wiring
+
+Each load sensor has 3 wires, arranged roughly as:
+
+![load sensor](docs/load_cell.svg)
+
+There is no formal standard for which colour is which wire - the only way is to measure the resistance across the three combinations - one set will produce a value roughly double that of the other two. In my testing, I found the following colours relatively consistently:
+
+| colour | meaning |
+|--|--|
+| Black | + |
+| Red | C |
+| White | - |
+
+The load sensors need to be connected together to form a [Wheatstone Bridge](https://www.hbm.com/en/7163/wheatstone-bridge-circuit/). Connecting 4 load cells is relatively simple - the schematic is below. Basically connect these (reversed engineered from the open source [SparkFun Load Sensor Combinator](https://www.sparkfun.com/products/13878)):
+
+![Full bridge connected to HX711](docs/full_bridge.svg)
+
+| source | end |
+|--|--|
+| - of upper left | - of lower left |
+| - of upper right | - of lower right |
+| + of upper left | + of upper right |
+| + of lower left | + of lower right |
+
+This gives you the following outputs:
+
+| connection | output |
+|--|--|
+| C of upper left | E+ |
+| C of upper right | A+ |
+| C of lower left | A- |
+| C of lower right | E- |
+
+Connect the HX711 to the Arduino/Photon as outlined above.
