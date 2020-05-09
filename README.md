@@ -2,6 +2,15 @@
 
 a simple outdoor scales using 4 x load cells combined with an HX711 and a Particle Photon to route data to the cloud.
 
+## TODO
+1. add temperature sensor
+2. add calibration + store that in cloud
+3. send measurement data (temp, weight) to cloud
+4. design PCB, build PCB
+5. decide on power source
+6. put in waterproof box
+7. build physical scales
+
 ## Particle / Arduino code
 
 This code is designed to run on the Particle Photon device. It makes use of the great HX711ADC library from <https://github.com/eliteio/HX711ADC/>
