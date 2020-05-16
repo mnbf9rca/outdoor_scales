@@ -86,7 +86,6 @@ void setup()
                                                    // by the SCALE parameter (not set yet)
 
   scale.set_scale(); // this value is obtained by calibrating the scale with known weights; see the README for details
-  scale.tare();      // reset the scale to 0
 
   publishChar("After setting up the scale:", "");
 
