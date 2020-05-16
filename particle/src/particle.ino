@@ -90,13 +90,13 @@ void setup()
 
   publishChar("After setting up the scale:", "");
 
-  publishNumber("read:", scale.read()); // print a raw reading from the ADC
+  publishNumber("read", scale.read()); // print a raw reading from the ADC
 
-  publishNumber("read average:", scale.read_average(20)); // print the average of 20 readings from the ADC
+  publishNumber("read average", scale.read_average(20)); // print the average of 20 readings from the ADC
 
-  publishNumber("get value:", scale.get_value(5)); // print the average of 5 readings from the ADC minus the tare weight, set with tare()
+  publishNumber("get value", scale.get_value(5)); // print the average of 5 readings from the ADC minus the tare weight, set with tare()
 
-  publishNumber("get units:", scale.get_units(5)); // print the average of 5 readings from the ADC minus tare weight, divided
+  publishNumber("get units", scale.get_units(5)); // print the average of 5 readings from the ADC minus tare weight, divided
                                                    // by the SCALE parameter set with set_scale
 
   publishChar("Readings:", "");
@@ -105,10 +105,10 @@ void loop()
 {
   digitalWrite(led1, HIGH);
   digitalWrite(led2, HIGH); // put the ADC in sleep mode
-  publishNumber("one value:", scale.get_value());
-  publishNumber("average/value:", scale.get_value(10));
-  publishNumber("one units:", scale.get_units());
-  publishNumber("average/units:", scale.get_units(10));
+  publishNumber("single/value", scale.get_value());
+  publishNumber("average/value", scale.get_value(10));
+  publishNumber("single/units", scale.get_units());
+  publishNumber("average/unit:", scale.get_units(10));
   delay(100);
   digitalWrite(led1, LOW);
   digitalWrite(led2, LOW);
