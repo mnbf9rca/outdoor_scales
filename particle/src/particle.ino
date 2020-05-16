@@ -107,7 +107,7 @@ void loop()
   publishNumber("single/value", scale.get_value());
   publishNumber("average/value", scale.get_value(10));
   publishNumber("single/units", scale.get_units());
-  publishNumber("average/unit:", scale.get_units(10));
+  publishNumber("average/unit", scale.get_units(10));
   delay(100);
   digitalWrite(led1, LOW);
   digitalWrite(led2, LOW);
