@@ -1,5 +1,7 @@
 // This #include statement was automatically added by the Particle IDE.
+#include <Particle.h>
 #include <HX711ADC.h>
+
 
 /*
  * Project particle
