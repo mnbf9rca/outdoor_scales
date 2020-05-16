@@ -1,7 +1,5 @@
 // This #include statement was automatically added by the Particle IDE.
-#include <Particle.h>
 #include <HX711ADC.h>
-
 
 /*
  * Project particle
@@ -49,7 +47,7 @@ void publishNumber(const char *name, long int value)
     publishChar("Out of memory", "publishNumber");
     return;
   }
-  snprintf(buf, bufz, "%f", value);
+  snprintf(buf, bufz, "%lf", value);
   publishChar(name, buf);
   free(buf);
 }
@@ -64,12 +62,16 @@ void publishChar(const char *name, const char *message)
 
 HX711ADC scale(HX711DOUT, HX711SCK);
 
-double currentValue = 0.0;
+int tare(String extra)
+{
+    scale.tare();
+    return 1;
+}
 
 // setup() runs once, when the device is first turned on.
 void setup()
 {
-
+  bool success = Particle.function("tare", tare);
   pinMode(led1, OUTPUT);
   pinMode(led2, OUTPUT);
   scale.begin();
@@ -83,8 +85,8 @@ void setup()
   publishNumber("get units:", scale.get_units(5)); // print the average of 5 readings from the ADC minus tare weight (not set) divided
                                                    // by the SCALE parameter (not set yet)
 
-  scale.set_scale(2280.f); // this value is obtained by calibrating the scale with known weights; see the README for details
-  scale.tare();            // reset the scale to 0
+  scale.set_scale(); // this value is obtained by calibrating the scale with known weights; see the README for details
+  scale.tare();      // reset the scale to 0
 
   publishChar("After setting up the scale:", "");
 
@@ -103,8 +105,10 @@ void loop()
 {
   digitalWrite(led1, HIGH);
   digitalWrite(led2, HIGH); // put the ADC in sleep mode
-  publishNumber("one reading:", scale.get_units());
-  publishNumber("| average:", scale.get_units(10));
+  publishNumber("one value:", scale.get_value());
+  publishNumber("average/value:", scale.get_value(10));
+  publishNumber("one units:", scale.get_units());
+  publishNumber("average/units:", scale.get_units(10));
   delay(100);
   digitalWrite(led1, LOW);
   digitalWrite(led2, LOW);
