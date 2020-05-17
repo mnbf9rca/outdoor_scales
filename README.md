@@ -3,6 +3,7 @@
 a simple outdoor scales using 4 x load cells combined with an HX711 and a Particle Photon to route data to the cloud.
 
 ## TODO
+
 1. add temperature sensor
 2. add calibration + store that in cloud
 3. send measurement data (temp, weight) to cloud
@@ -13,7 +14,7 @@ a simple outdoor scales using 4 x load cells combined with an HX711 and a Partic
 
 ## Particle / Arduino code
 
-This code is designed to run on the Particle Photon device. It makes use of the great HX711ADC library from <https://github.com/eliteio/HX711ADC/>
+This code is designed to run on the Particle Photon device and the code is all in the [particle](particle) subfolder. It makes use of the great HX711ADC library from <https://github.com/eliteio/HX711ADC/>
 
 It assumes:
 
@@ -22,7 +23,7 @@ It assumes:
 
 The LED blinks every time a reading is taken.
 
-## wiring
+## Load cells
 
 Each load sensor has 3 wires, arranged roughly as:
 
@@ -33,10 +34,10 @@ The idea is that by measuring the change in resistance you can measure the weigh
 There is no formal standard for which colour is which wire, but there appears to be a rough convention, although the only way is to measure the resistance across the three combinations - one set will produce a value roughly double that of the other two.
 
 | colour | meaning |
-|--|--|
-| Black | + |
-| Red | C |
-| White | - |
+| ------ | ------- |
+| Black  | +       |
+| Red    | C       |
+| White  | -       |
 
 The load sensors need to be connected together to form a [Wheatstone Bridge](https://www.hbm.com/en/7163/wheatstone-bridge-circuit/). Connecting 4 load cells is relatively simple - the schematic is below. :
 
@@ -46,21 +47,21 @@ The load sensors need to be connected together to form a [Wheatstone Bridge](htt
 
 I did try reverse engineering the open source [SparkFun Load Sensor Combinator](https://www.sparkfun.com/products/13878)), which results in the following:
 
-| source | end |
-|--|--|
-| - of upper left | - of lower left |
+| source           | end              |
+| ---------------- | ---------------- |
+| - of upper left  | - of lower left  |
 | - of upper right | - of lower right |
-| + of upper left | + of upper right |
-| + of lower left | + of lower right |
+| + of upper left  | + of upper right |
+| + of lower left  | + of lower right |
 
 This gives you the following outputs:
 
-| connection | output |
-|--|--|
-| C of upper left | E+ |
-| C of upper right | A+ |
-| C of lower left | A- |
-| C of lower right | E- |
+| connection       | output |
+| ---------------- | ------ |
+| C of upper left  | E+     |
+| C of upper right | A+     |
+| C of lower left  | A-     |
+| C of lower right | E-     |
 
 however this gave readings which weren't particualy stable.
 
@@ -110,4 +111,21 @@ EXEC sp_addrolemember 'db_datawriter', 'cloud_sql_spn'
 EXEC sp_addrolemember 'db_datareader', 'cloud_sql_spn'
 ```
 
+The database has a relatively simple structure:
+
+```SQL
+-- This script only contains the table creation statements and does not fully represent the table in the database. It's still missing: sequences, indices, triggers. Do not use it as a backup.
+
+CREATE TABLE [dbo].[cloud_scales_source_data] (
+    [id] bigint,
+    [source] varchar,
+    [type] varchar,
+    [name] varchar,
+    [event] varchar,
+    [data] decimal,
+    [device_id] varchar,
+    [published_at] datetime,
+    PRIMARY KEY ([id])
+);
+```
 
