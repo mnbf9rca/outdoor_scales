@@ -1,0 +1,14 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "type": "eventHubTrigger",
+      "name": "event",
+      "direction": "in",
+      "eventHubName": "cloud_scales",
+      "connection": "cynexia_sqlwriter_EVENTHUB",
+      "cardinality": "many",
+      "consumerGroup": "sqlwriter"
+    }
+  ]
+}
