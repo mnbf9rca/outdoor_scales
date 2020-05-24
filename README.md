@@ -4,13 +4,15 @@ a simple outdoor scales using 4 x load cells combined with an HX711 and a Partic
 
 ## TODO
 
-1. add temperature sensor
-2. add calibration + store that in cloud
-3. send measurement data (temp, weight) to cloud
-4. design PCB, build PCB
-5. decide on power source
-6. put in waterproof box
-7. build physical scales
+1. Update wiring instructions (white-white, black-black, tap on red)
+2. describe scale function (measure known weight, take raw reading, take measured reading, deduct raw to get tared weight, divide tared reading by expected weight.)
+3. add temperature sensor
+4. add calibration + store that in cloud
+5. send measurement data (temp, weight) to cloud
+6. design PCB, build PCB
+7. decide on power source
+8. put in waterproof box
+9. build physical scales
 
 ## Particle / Arduino code
 
@@ -42,6 +44,8 @@ There is no formal standard for which colour is which wire, but there appears to
 The load sensors need to be connected together to form a [Wheatstone Bridge](https://www.hbm.com/en/7163/wheatstone-bridge-circuit/). Connecting 4 load cells is relatively simple - the schematic is below. :
 
 ![Full bridge connected to HX711](docs/full_bridge.svg)
+
+Basically, you need to wire up the devices white-to-white, black-to-black, and create an bridge in teh middle.
 
 ### Load Sensor Combinator
 
@@ -128,4 +132,3 @@ CREATE TABLE [dbo].[cloud_scales_source_data] (
     PRIMARY KEY ([id])
 );
 ```
-
