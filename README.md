@@ -103,17 +103,40 @@ $body.type='cloud_scales'
 
 ### Event hub to SQL DB
 
-i decided to store the data in to a SQL database. I'm creating an Azure Function which
+i decided to store the data in to a SQL database. I'm creating an Azure Function which writes teh data.
 
 - I'm using the [smallest DTU-based DB with 5 DTUs](https://azure.microsoft.com/en-gb/pricing/details/sql-database/single/).
+
+#### AAD auth
+
+i couldnt get this to work:
+
 - Create a `my_db_owner` group in AAD, and then [enable AAD integration](https://docs.microsoft.com/en-us/azure/sql-database/sql-database-aad-authentication-configure?tabs=azure-powershell).
 - [create an SPN for RBAC](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest) in AAD using the az cli: `az ad sp create-for-rbac --name cloud_sql_spn` and make a note of the password and appID.
+- Create the user in SQL: `CREATE USER [cloud_sql_spn] FROM EXTERNAL PROVIDER;`
+
+
 - Grant that SPN `db_datawriter` and `db_datareader` access to the DB:
 
 ```SQL
-EXEC sp_addrolemember 'db_datawriter', 'cloud_sql_spn'
-EXEC sp_addrolemember 'db_datareader', 'cloud_sql_spn'
+ALTER ROLE db_datareader ADD MEMBER [cloud_sql_spn] ;
+ALTER ROLE db_datawriter ADD MEMBER [cloud_sql_spn] ;
 ```
+
+### local user
+
+A `user` without a `login` is authenticated against a single DB. a `login` is created in master (with a password there), and then you create a corresponding `user` in each database, meaning the password is managed in a single place. I need a `user`.
+
+``` SQL
+CREATE USER [cloud_scales_sql_db_writer_local] WITH PASSWORD 'password';
+ALTER ROLE db_datareader ADD MEMBER [cloud_scales_sql_db_writer_local] ;
+ALTER ROLE db_datawriter ADD MEMBER [cloud_scales_sql_db_writer_local] ;
+ALTER ROLE db_ddladmin ADD MEMBER [cloud_scales_sql_db_writer_local] ;
+```
+
+then use connection string:
+`DRIVER={ODBC Driver 17 for SQL Server};SERVER=cynexia-sql.database.windows.net;PORT=1433;DATABASE=cloud_scales;Encrypt=yes;Connection Timeout=10;TrustServerCertificate=no;UID=cloud_scales_sql_db_writer_local;PWD=password`
+
 
 The database has a relatively simple structure:
 
@@ -132,3 +155,69 @@ CREATE TABLE [dbo].[cloud_scales_source_data] (
     PRIMARY KEY ([id])
 );
 ```
+
+## Troubleshooting
+
+### Library not loaded: /usr/local/opt/unixodbc/lib/libodbc.2.dylib
+
+``` bash
+ImportError: dlopen(/Users/_/Downloads/git/outdoor_scales/azure/.venv/lib/python3.8/site-packages/pyodbc.cpython-38-darwin.so, 2): Library not loaded: /usr/local/opt/unixodbc/lib/libodbc.2.dylib
+  Referenced from: /Users/_/Downloads/git/outdoor_scales/azure/.venv/lib/python3.8/site-packages/pyodbc.cpython-38-darwin.so
+  Reason: image not found
+```
+
+Install unixodbcc:
+
+```bash
+brew install unixodbc
+```
+
+### pyodbc.Error: ('01000', "[01000] [unixODBC][Driver Manager]Can't open lib 'ODBC Driver 13 for SQL Server' : file not found (0) (SQLDriverConnect)")
+
+e.g.
+
+``` python
+>>> environ.get('cloud_sql_conn_string')
+'Driver={ODBC Driver 13 for SQL Server};Server=tcp:cynexia-sql.database.windows.net,1433;Database=cloud_scales;Uid=<username>;Pwd=<password;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;Authentication=ActiveDirectoryPassword'
+>>> import pyodbc
+>>> cnxn = pyodbc.connect(environ.get('cloud_sql_conn_string'))
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+pyodbc.Error: ('01000', "[01000] [unixODBC][Driver Manager]Can't open lib 'ODBC Driver 13 for SQL Server' : file not found (0) (SQLDriverConnect)")
+```
+
+install ODBC driver as [per MS instructions](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/install-microsoft-odbc-driver-sql-server-macos?view=sql-server-ver15). Note that I switched to using `ODBC Driver 17 for SQL Server` as i couldnt get 13 to work on my mac.
+
+``` bash
+brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
+brew update
+HOMEBREW_NO_ENV_FILTERING=1 ACCEPT_EULA=Y brew install msodbcsql17 mssql-tools
+ACCEPT_EULA=Y brew install msodbcsql@13.1.9.2 mssql-tools@14.0.6.0
+```
+
+## pyodbc.Error: ('01000', "[01000] [unixODBC][Driver Manager]Can't open lib '/usr/local/lib/libmsodbcsql.13.dylib' : file not found (0) (SQLDriverConnect)")
+
+the error is:
+
+``` bash
+pyodbc.Error: ('01000', "[01000] [unixODBC][Driver Manager]Can't open lib '/usr/local/lib/libmsodbcsql.13.dylib' : file not found (0) (SQLDriverConnect)")
+```
+
+I just updated to use `driver={ODBC Driver 17 for SQL Server}`
+
+## find the location of odbcinst.ini on a mac
+
+Assuming ODBC is installed, run `odbcinst -j` in terminal:
+
+``` bash
+(.venv) (base) rob@robs-MBP azure % odbcinst -j
+unixODBC 2.3.7
+DRIVERS............: /usr/local/etc/odbcinst.ini
+SYSTEM DATA SOURCES: /usr/local/etc/odbc.ini
+FILE DATA SOURCES..: /usr/local/etc/ODBCDataSources
+USER DATA SOURCES..: /Users/rob/.odbc.ini
+SQLULEN Size.......: 8
+SQLLEN Size........: 8
+SQLSETPOSIROW Size.: 8
+```
+

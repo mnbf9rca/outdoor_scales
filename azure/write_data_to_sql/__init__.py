@@ -1,15 +1,23 @@
 import logging
 import pyodbc
+from dateutil import parser
+from json import loads, dumps
 from os import environ
 
 import azure.functions as func
 
 
 def main(event: func.EventHubEvent):
-    logging.info('Python EventHub trigger processed an event: %s',
-                 event.get_body().decode('utf-8'))
+    event_data = [loads(s) for s in [e.get_body().decode('utf-8') for e in event]]
+    logging.info('Python EventHub trigger received an event set of %s items: %s',
+                 len(event_data),
+                 event_data)
 
-    ''' expand input messages
+    cnxn = pyodbc.connect(environ.get('cloud_sql_conn_string'))
+    cursor = cnxn.cursor()
+    cursor.fast_executemany = True
+    ''' 
+    table: cloud_scales_source_data
     [source] varchar(64),
     [type] varchar(64),
     [name] varchar(64),
@@ -19,8 +27,24 @@ def main(event: func.EventHubEvent):
     [published_at] datetime,
     '''
 
-    cnxn = pyodbc.connect(environ.get('cloud_sql_conn_string'))
-    cursor = cnxn.cursor()
-    cursor.fast_executemany = True
-    
-    
+    cursor.executemany("""
+    INSERT INTO cloud_scales_source_data
+    ( [source], 
+      [type], 
+      [name], 
+      [event], 
+      [data], 
+      [device_id], 
+      [published_at])
+    VALUES (?,?,?,?,?,?,?)    
+    """, [(s["source"],
+           s["type"],
+           s["name"],
+           s["event"],
+           s["data"],
+           s["device_id"],
+           parser.parse(s["published_at"]))
+          for s in event_data])
+    cursor.commit()
+
+    return 

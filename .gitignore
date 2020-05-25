@@ -314,3 +314,6 @@ docs/doxygen/html/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
+
+
+.telemetry

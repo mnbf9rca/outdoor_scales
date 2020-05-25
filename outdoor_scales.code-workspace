@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "azure"
+		},
+		{
+			"path": "particle"
+		}
+	],
+	"settings": {
+		"cortex-debug.openocdPath": "${command:particle.getDebuggerOpenocdPath}"
+	}
+}
