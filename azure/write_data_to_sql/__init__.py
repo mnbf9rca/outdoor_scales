@@ -1,14 +1,18 @@
 import logging
-import pyodbc
-from dateutil import parser
-from json import loads, dumps
+from collections.abc import Iterable
+from json import dumps, loads
 from os import environ
 
 import azure.functions as func
+import pyodbc
+from dateutil import parser
 
 
 def main(event: func.EventHubEvent):
-    event_data = [loads(s) for s in [e.get_body().decode('utf-8') for e in event]]
+    if isinstance(event, Iterable):
+        event_data = [loads(s) for s in [e.get_body().decode('utf-8') for e in event]]
+    else:
+        event_data = [loads(event.get_body().decode('utf-8'))]
     logging.info('Python EventHub trigger received an event set of %s items: %s',
                  len(event_data),
                  event_data)
@@ -47,4 +51,4 @@ def main(event: func.EventHubEvent):
           for s in event_data])
     cursor.commit()
 
-    return 
+    return
