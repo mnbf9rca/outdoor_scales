@@ -10,7 +10,7 @@ from dateutil import parser
 
 def main(event: func.EventHubEvent):
 
-    # for some reason, when executing in azure, we dont get an iterable, even with cardinality=many
+    # for some reason, when executing in azure, we dont always get an iterable, even with cardinality=many
     # so test for it
     if isinstance(event, Iterable):
         logging.info('iterable')
@@ -37,13 +37,18 @@ def main(event: func.EventHubEvent):
         [published_at] datetime,
         '''
 
+        '''
         cursor.executemany("""INSERT INTO cloud_scales_source_data
                         (       [source],   [type],   [name],    [event],    [data],    [device_id],                  [published_at])
                         VALUES (?,?,?,?,?,?,?)    
                         """,
                            [(s["source"], s["type"], s["name"], s["event"], s["data"], s["device_id"], parser.parse(s["published_at"]))
                             for s in event_data])
+        '''
 
+        cursor.executemany("{CALL insert_cloud_measurement (?,?,?,?,?,?,?)}", 
+                            [(s["source"], s["type"], s["name"], s["event"], s["data"], s["device_id"], parser.parse(s["published_at"]))
+                            for s in event_data])
     # shouldnt need to close, but seems to improve throughput
     cnxn.close()
 
