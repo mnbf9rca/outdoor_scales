@@ -79,8 +79,8 @@ void loop()
 {
   digitalWrite(D7, !digitalRead(D7));
   sensors.requestTemperatures();
-  publishNumber("measurement/weightvalue", scale.get_value(10));
-  publishNumber("measurement/weightunits", scale.get_units(10));
-  publishNumber("measurement/temperature", sensors.getTempCByIndex(0));
+  publishNumber("measurement/weight/value", scale.get_value(10));
+  publishNumber("measurement/weight/units", scale.get_units(10));
+  publishNumber("measurement/temperature/c", sensors.getTempCByIndex(0));
   delay(100);
 }
