@@ -21,34 +21,38 @@ def main(event: func.EventHubEvent):
     logging.info('Python EventHub trigger received an event set of %s items: %s',
                  len(event_data),
                  dumps(event_data))
+    try:
+        cnxn = pyodbc.connect(environ.get('cloud_sql_conn_string'))
+    except Exception as e:
+            logging.error(e)
+    try:
+        with cnxn:
+            cursor = cnxn.cursor()
+            cursor.fast_executemany = True
+            ''' 
+            table: cloud_scales_source_data
+            [source] varchar(64),
+            [type] varchar(64),
+            [name] varchar(64),
+            [event] varchar(64),
+            [data] decimal(18,0),
+            [device_id] varchar(24),
+            [published_at] datetime,
+            '''
 
-    cnxn = pyodbc.connect(environ.get('cloud_sql_conn_string'))
-    with cnxn:
-        cursor = cnxn.cursor()
-        cursor.fast_executemany = True
-        ''' 
-        table: cloud_scales_source_data
-        [source] varchar(64),
-        [type] varchar(64),
-        [name] varchar(64),
-        [event] varchar(64),
-        [data] decimal(18,0),
-        [device_id] varchar(24),
-        [published_at] datetime,
-        '''
-
-        '''
-        cursor.executemany("""INSERT INTO cloud_scales_source_data
-                        (       [source],   [type],   [name],    [event],    [data],    [device_id],                  [published_at])
-                        VALUES (?,?,?,?,?,?,?)    
-                        """,
-                           [(s["source"], s["type"], s["name"], s["event"], s["data"], s["device_id"], parser.parse(s["published_at"]))
-                            for s in event_data])
-        '''
-
-        cursor.executemany("{CALL insert_cloud_measurement (?,?,?,?,?,?,?)}", 
-                            [(s["source"], s["type"], s["name"], s["event"], float(s["data"]), s["device_id"], parser.parse(s["published_at"]))
-                            for s in event_data])
+            '''
+            cursor.executemany("""INSERT INTO cloud_scales_source_data
+                            (       [source],   [type],   [name],    [event],    [data],    [device_id],                  [published_at])
+                            VALUES (?,?,?,?,?,?,?)    
+                            """,
+                            [(s["source"], s["type"], s["name"], s["event"], s["data"], s["device_id"], parser.parse(s["published_at"]))
+                                for s in event_data])
+            '''
+            cursor.executemany("{CALL insert_cloud_measurement (?,?,?,?,?,?,?)}", 
+                                    [(s["source"], s["type"], s["name"], s["event"], float(s["data"]), s["device_id"], parser.parse(s["published_at"]))
+                                    for s in event_data])
+    except Exception as e:
+        logging.error(e)
     # shouldnt need to close, but seems to improve throughput
     cnxn.close()
 
