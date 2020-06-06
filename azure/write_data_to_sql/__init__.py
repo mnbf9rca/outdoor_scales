@@ -47,7 +47,7 @@ def main(event: func.EventHubEvent):
         '''
 
         cursor.executemany("{CALL insert_cloud_measurement (?,?,?,?,?,?,?)}", 
-                            [(s["source"], s["type"], s["name"], s["event"], s["data"], s["device_id"], parser.parse(s["published_at"]))
+                            [(s["source"], s["type"], s["name"], s["event"], float(s["data"]), s["device_id"], parser.parse(s["published_at"]))
                             for s in event_data])
     # shouldnt need to close, but seems to improve throughput
     cnxn.close()
