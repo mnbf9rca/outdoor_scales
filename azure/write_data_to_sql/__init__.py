@@ -19,9 +19,8 @@ def main(event: func.EventHubEvent):
     else:
         logger.debug('not iterable')
         event_data = loads(event.get_body().decode('utf-8'))
-    logger.debug('Python EventHub trigger received an event set of %s items: %s',
-                 len(event_data),
-                 dumps(event_data))
+    logger.info(f'Received trigger for {len(event_data)} items')
+    logger.debug(f'payload: {dumps(event_data)}')
     try:
         cnxn = pyodbc.connect(environ.get('cloud_sql_conn_string'))
     except Exception as e:
@@ -56,5 +55,6 @@ def main(event: func.EventHubEvent):
         logger.error(e)
     # shouldnt need to close, but seems to improve throughput
     cnxn.close()
+    logger.info("Successfully stored in DB")
 
     return
