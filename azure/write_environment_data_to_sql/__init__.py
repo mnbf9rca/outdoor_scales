@@ -30,26 +30,26 @@ def main(event: func.EventHubEvent):
             cursor = cnxn.cursor()
             cursor.fast_executemany = True
             ''' 
-            sp: insert_car_measurement
-            @event
-            @latlong
-            @published_at
-            @deviceID
-
-            message:
-            {
-            "device_id": "{{{PARTICLE_DEVICE_ID}}}",
-            "published_at": "{{{PARTICLE_PUBLISHED_AT}}}",
-            "source": "particle.io",
-            "type": "car_gps",
-            "name": "car_gps",
-            "event": "{{{PARTICLE_EVENT_NAME}}}",
-            "data": "{{{PARTICLE_EVENT_VALUE}}}"
-            }
+            table: cloud_scales_source_data
+            [source] varchar(64),
+            [type] varchar(64),
+            [name] varchar(64),
+            [event] varchar(64),
+            [data] decimal(18,0),
+            [device_id] varchar(24),
+            [published_at] datetime,
             '''
 
-            cursor.executemany("{CALL insert_car_measurement (?,?,?,?)}", 
-                                    [(s["event"], s["data"],  parser.parse(s["published_at"], s["device_id"]))
+            '''
+            cursor.executemany("""INSERT INTO cloud_scales_source_data
+                            (       [source],   [type],   [name],    [event],    [data],    [device_id],                  [published_at])
+                            VALUES (?,?,?,?,?,?,?)    
+                            """,
+                            [(s["source"], s["type"], s["name"], s["event"], s["data"], s["device_id"], parser.parse(s["published_at"]))
+                                for s in event_data])
+            '''
+            cursor.executemany("{CALL insert_cloud_measurement (?,?,?,?,?,?,?)}", 
+                                    [(s["source"], s["type"], s["name"], s["event"], float(s["data"]), s["device_id"], parser.parse(s["published_at"]))
                                     for s in event_data])
     except Exception as e:
         logger.error(e)
