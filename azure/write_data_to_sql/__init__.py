@@ -19,7 +19,7 @@ def main(event: func.EventHubEvent):
     else:
         logger.debug('not iterable')
         event_data = loads(event.get_body().decode('utf-8'))
-    logger.info('Python EventHub trigger received an event set of %s items: %s',
+    logger.debug('Python EventHub trigger received an event set of %s items: %s',
                  len(event_data),
                  dumps(event_data))
     try:
