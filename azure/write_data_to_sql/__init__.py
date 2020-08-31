@@ -13,10 +13,10 @@ def main(event: func.EventHubEvent):
     # for some reason, when executing in azure, we dont always get an iterable, even with cardinality=many
     # so test for it
     if isinstance(event, Iterable):
-        logging.info('iterable')
+        logging.debug('iterable')
         event_data = [loads(s) for s in [e.get_body().decode('utf-8') for e in event]]
     else:
-        logging.info('not iterable')
+        logging.debug('not iterable')
         event_data = loads(event.get_body().decode('utf-8'))
     logging.info('Python EventHub trigger received an event set of %s items: %s',
                  len(event_data),
@@ -55,5 +55,5 @@ def main(event: func.EventHubEvent):
         logging.error(e)
     # shouldnt need to close, but seems to improve throughput
     cnxn.close()
-
+    
     return
