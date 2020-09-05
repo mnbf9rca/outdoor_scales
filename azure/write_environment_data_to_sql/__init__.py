@@ -2,7 +2,7 @@ import logging
 from collections.abc import Iterable
 from json import dumps, loads
 from os import environ
-from typing import List
+from typing import List, Any
 
 import azure.functions as func
 import pyodbc
@@ -20,7 +20,7 @@ def main(event: func.EventHubEvent):
 
     return _write_to_database(event_data)
 
-def _get_event_data(event: func.EventHubEvent) -> List:
+def _get_event_data(event: func.EventHubEvent) -> List[Any]:
     if isinstance(event, Iterable):
         logger.debug('iterable')
         return [loads(s) for s in [e.get_body().decode('utf-8') for e in event]]
