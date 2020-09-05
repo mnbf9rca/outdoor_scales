@@ -67,4 +67,4 @@ def _write_to_database(event_data: dict) -> int:
     cnxn.close()
     logger.info("Successfully stored in DB")
 
-    return 0
+    return None
