@@ -65,6 +65,6 @@ def _write_to_database(event_data: dict) -> int:
         return -1
     # shouldnt need to close, but seems to improve throughput
     cnxn.close()
-    logger.info("Successfully stored in DB")
+    logger.info(f"Successfully stored {len(event_data)} in DB")
 
     return None
